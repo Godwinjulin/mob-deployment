@@ -1,0 +1,118 @@
+trigger:
+- main
+
+variables:
+  terraformVersion: '1.0.0'
+  workingDirectory: '$(Build.SourcesDirectory)/terraform'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: UAT
+    jobs:
+      - job: TerraformInitApply
+        displayName: "Initialize and Apply Terraform in UAT"
+        variables:
+          environment: 'UAT'
+        steps:
+          - task: PowerShell@2
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: PowerShell@2
+            inputs:
+              command: 'init'
+              workingDirectory: $(workingDirectory)
+
+          - task: PowerShell@2
+            inputs:
+              Command: 'apply'
+              args: '-auto-approve -var="environment=$(environment)"'
+              workingDirectory: $(workingDirectory)
+
+          - script: |
+              echo "[all]" > $(Build.SourcesDirectory)/ansible/inventory
+              terraform output -json vm_public_ips | jq -r '.[] | @text "vm ansible_host=\(.) ansible_user=azureuser ansible_password=ComplexPassword!23"' >> $(Build.SourcesDirectory)/ansible/inventory
+            displayName: 'Generate Ansible Inventory'
+
+          - script: |
+              sudo apt-get update
+              sudo apt-get install ansible -y
+            displayName: 'Install Ansible'
+
+          - script: |
+              ansible-playbook -i $(Build.SourcesDirectory)/ansible/inventory $(Build.SourcesDirectory)/ansible/playbook.yml
+            displayName: 'Run Ansible Playbook'
+
+  - stage: PreProd
+    jobs:
+      - job: TerraformInitApply
+        displayName: "Initialize and Apply Terraform in Pre-Prod"
+        variables:
+          environment: 'PreProd'
+        steps:
+          - task: PowerShell@2
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: PowerShell@2
+            inputs:
+              command: 'init'
+              workingDirectory: $(workingDirectory)
+
+          - task: PowerShell@2
+            inputs:
+              command: 'apply'
+              args: '-auto-approve -var="environment=$(environment)"'
+              workingDirectory: $(workingDirectory)
+
+          - script: |
+              echo "[all]" > $(Build.SourcesDirectory)/ansible/inventory
+              terraform output -json vm_public_ips | jq -r '.[] | @text "vm ansible_host=\(.) ansible_user=azureuser ansible_password=ComplexPassword!23"' >> $(Build.SourcesDirectory)/ansible/inventory
+            displayName: 'Generate Ansible Inventory'
+
+          - script: |
+              sudo apt-get update
+              sudo apt-get install ansible -y
+            displayName: 'Install Ansible'
+
+          - script: |
+              ansible-playbook -i $(Build.SourcesDirectory)/ansible/inventory $(Build.SourcesDirectory)/ansible/playbook.yml
+            displayName: 'Run Ansible Playbook'
+
+  - stage: Production
+    jobs:
+      - job: TerraformInitApply
+        displayName: "Initialize and Apply Terraform in Production"
+        variables:
+          environment: 'Production'
+        steps:
+          - task: PowerShell@2
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: PowerShell@2
+            inputs:
+              command: 'init'
+              workingDirectory: $(workingDirectory)
+
+          - task: TerraformCLI@0
+            inputs:
+              command: 'apply'
+              args: '-auto-approve -var="environment=$(environment)"'
+              workingDirectory: $(workingDirectory)
+
+          - script: |
+              echo "[all]" > $(Build.SourcesDirectory)/ansible/inventory
+              terraform output -json vm_public_ips | jq -r '.[] | @text "vm ansible_host=\(.) ansible_user=azureuser ansible_password=ComplexPassword!23"' >> $(Build.SourcesDirectory)/ansible/inventory
+            displayName: 'Generate Ansible Inventory'
+
+          - script: |
+              sudo apt-get update
+              sudo apt-get install ansible -y
+            displayName: 'Install Ansible'
+
+          - script: |
+              ansible-playbook -i $(Build.SourcesDirectory)/ansible/inventory $(Build.SourcesDirectory)/ansible/playbook.yml
+            displayName: 'Run Ansible Playbook'
