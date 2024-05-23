@@ -16,16 +16,16 @@ stages:
         variables:
           environment: 'UAT'
         steps:
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               terraformVersion: $(terraformVersion)
 
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               command: 'init'
               workingDirectory: $(workingDirectory)
 
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               Command: 'apply'
               args: '-auto-approve -var="environment=$(environment)"'
@@ -52,16 +52,16 @@ stages:
         variables:
           environment: 'PreProd'
         steps:
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               terraformVersion: $(terraformVersion)
 
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               command: 'init'
               workingDirectory: $(workingDirectory)
 
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               command: 'apply'
               args: '-auto-approve -var="environment=$(environment)"'
@@ -88,16 +88,16 @@ stages:
         variables:
           environment: 'Production'
         steps:
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               terraformVersion: $(terraformVersion)
 
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               command: 'init'
               workingDirectory: $(workingDirectory)
 
-          - task: TerraformInstaller@0
+          - task: UseTerraform@0
             inputs:
               command: 'apply'
               args: '-auto-approve -var="environment=$(environment)"'
